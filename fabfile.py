@@ -16,6 +16,7 @@ def change_version(change):
 
 def release(new_version):
     with quiet():
+        local('rm -r dist')
         local('git commit -am "new version {}"'.format(new_version))
         local('git tag -a v{0} -m \'new version {0}\''.format(new_version))
         local('git push origin master --tags')
