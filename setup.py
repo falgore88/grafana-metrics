@@ -3,7 +3,7 @@ from __future__ import with_statement
 from setuptools import setup, find_packages
 
 
-VERSION = "0.0.5"
+VERSION = "0.0.6"
 
 setup(
     name='grafana-metrics',
