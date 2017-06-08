@@ -20,7 +20,7 @@ def release(new_version):
         local('git tag -a v{0} -m \'new version {0}\''.format(new_version))
         local('git push origin master --tags')
     local("python setup.py register")
-    local("python setup.py sdist upload -r pypi")
+    local("twine upload dist/*")
 
 
 @task
