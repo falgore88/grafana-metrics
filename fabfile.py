@@ -10,7 +10,7 @@ def change_version(change):
     version = version_row.split(' = ')[1].strip()
     version = map(int, version[1:-1].split('.'))
     new_version = '.'.join(map(str, change(*version)))
-    local("sed -isetup.py 's/VERSION =.*/VERSION = \"{}\"/g' setup.py".format(new_version))
+    local("sed -i -e 's/VERSION =.*/VERSION = \"{}\"/g' setup.py".format(new_version))
     return new_version
 
 
