@@ -1,9 +1,11 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+from copy import copy
+
 import psutil
 from base import Metric, MetricData
-from copy import copy
+
 
 class CPU(Metric):
 

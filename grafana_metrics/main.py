@@ -64,17 +64,18 @@ class GMetrics(object):
         sections = [section for section in self.config.sections() if section.startswith("Metric:")]
         metrics = {}
         for section_name in sections:
-            section_params = dict(self.config.items(section_name))
+            section_params = self.config.items(section_name).to_dict()
             metric_type = section_params.pop('type')
             metric_name = section_name.replace('Metric:', '').strip()
-            metric = self.get_metric_by_type(metric_type, metric_name, section_params)
+            tags = section_params.pop('tag', [])
+            if not isinstance(tags, list):
+                tags = [tags]
+            metric = self.get_metric_by_type(metric_type, metric_name, section_params, tags)
             metrics["%s(%s)" % (metric_name, metric_type)] = metric
         return metrics
 
-    def get_metric_by_type(self, metric_type, metric_name, params):
-        tags = params.pop('tags', None) or None
-        if tags:
-            tags_data = tags.split(',')
+    def get_metric_by_type(self, metric_type, metric_name, params, tags_data):
+        if tags_data:
             tags = {}
             for tag_d in tags_data:
                 key, val = tag_d.split("=")
@@ -85,21 +86,22 @@ class GMetrics(object):
         raise GMetricsException('Unknown engine type "{}"'.format(metric_type))
 
     def get_engine(self):
-        engine_config = dict(self.config.items('Engine'))
+        engine_config = self.config.items('Engine')
+        engine_type = engine_config.get('type')
         engine = None
-        if engine_config['type'] == 'InfluxDB':
+        if engine_type == 'InfluxDB':
             params = dict(
-                host=engine_config['host'],
-                port=engine_config['port'],
-                database=engine_config['database'],
+                host=engine_config.get('host'),
+                port=engine_config.get('port'),
+                database=engine_config.get('database'),
                 username=engine_config.get('username') or None,
                 password=engine_config.get('password') or None
             )
             engine = InfluxDB(**params)
         if not engine:
-            raise GMetricsException('Unknown engine type "{}"'.format(engine_config['type']))
+            raise GMetricsException('Unknown engine type "{}"'.format(engine_type))
         else:
-            return engine_config['type'], params, engine
+            return engine_type, params, engine
 
     def parse_arguments(self):
         parser = ArgumentParser()
