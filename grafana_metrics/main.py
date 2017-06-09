@@ -13,7 +13,7 @@ from time import sleep
 
 from config import Config, ConfigValidationException
 from engines import InfluxDB
-from metrics import CPU
+from metrics import CPU, Memory
 
 
 def signal_handler(signal, frame):
@@ -75,15 +75,18 @@ class GMetrics(object):
         return metrics
 
     def get_metric_by_type(self, metric_type, metric_name, params, tags_data):
+
+        tags = {}
         if tags_data:
-            tags = {}
             for tag_d in tags_data:
                 key, val = tag_d.split("=")
                 tags[key.strip()] = val.strip()
 
         if metric_type == 'cpu':
             return CPU(metric_name, tags, **params)
-        raise GMetricsException('Unknown engine type "{}"'.format(metric_type))
+        elif metric_type == 'memory':
+            return Memory(metric_name, tags, **params)
+        raise GMetricsException('Unknown metric type "{}"'.format(metric_type))
 
     def get_engine(self):
         engine_config = self.config.items('Engine')
