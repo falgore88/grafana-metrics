@@ -6,8 +6,12 @@ import logging.handlers
 import os
 from argparse import ArgumentParser
 from ConfigParser import Error
+
 from config import Config, ConfigValidationException
 from engines import InfluxDB
+from metrics import CPU
+from time import sleep
+from datetime import datetime
 
 
 class GMetricsException(Exception):
@@ -47,6 +51,25 @@ class GMetrics(object):
 
         self.logger = logging.getLogger("GMetrics")
 
+    def get_metrics(self):
+        sections = [section for section in self.config.sections() if section.startswith("Metric:")]
+        metrics = {}
+        for section_name in sections:
+            section_params = dict(self.config.items(section_name))
+            metric_type = section_params.pop('type')
+            metric_name = section_name.replace('Metric:', '').strip()
+            metric = self.get_metric_by_type(metric_type, metric_name, section_params)
+            metrics["%s(%s)" % (metric_name, metric_type)] = metric
+        return metrics
+
+    def get_metric_by_type(self, metric_type, metric_name, params):
+        tags = params.pop('tags', None)
+        if tags:
+            tags = tags.split(',')
+        if metric_type == 'cpu':
+            return CPU(metric_name, tags, **params)
+        raise GMetricsException('Unknown engine type "{}"'.format(metric_type))
+
     def get_engine(self):
         engine_config = dict(self.config.items('Engine'))
         engine = None
@@ -74,8 +97,7 @@ class GMetrics(object):
         parser.add_argument(
             '--log',
             help='Path to log file',
-            type=str,
-            default='/var/log/gmetrics/gmetrics.log'
+            type=str
         )
         return parser.parse_args()
 
@@ -89,6 +111,25 @@ class GMetrics(object):
         self.logger.info("Initializing")
         engine_type, engine_params, engine = self.get_engine()
         self.logger.info('Find engine "{}" with options "{}"'.format(engine_type, ",".join(["%s=%s" % (k, v) for k, v in engine_params.items()])))
+
+        metrics = self.get_metrics()
+        for metric_name, metric in metrics.items():
+            self.logger.info('Find metric "{}" interval={} tags={}'.format(metric_name, metric.interval, metric.tags))
+        metric_interval_data = {}
+
+        while True:
+            metric_collected_data = []
+            for metric_name, metric in metrics.items():
+                if not metric_interval_data.get(metric_name) or (datetime.now() - metric_interval_data[metric_name]).seconds >= metric.interval:
+                    try:
+                        collected_data = metric.collect()
+                        for metric_data in collected_data:
+                            self.logger.info('The metric "{}" is collected: {}'.format(metric_name, unicode(metric_data)))
+                        metric_collected_data.extend(collected_data)
+                    except Exception as e:
+                        self.logger.warning('Metric "{}" collection failed: {}'.format(metric_name, str(e)))
+                    metric_interval_data[metric_name] = datetime.now()
+            sleep(1)
 
 
 

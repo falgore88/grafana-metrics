@@ -8,21 +8,16 @@ from datetime import datetime
 
 class CPU(Metric):
 
-    def __init__(self, measurement, engine, tags=None):
-        self.measurement = measurement
-        self.tags = tags
-        self.engine = engine
-
     def collect(self):
         metrics = []
         for cpu_num, cpu_percent in enumerate(psutil.cpu_percent(interval=1, percpu=True), start=1):
             metrics.append(MetricData(
                 name=self.measurement,
                 value=cpu_percent,
-                time=datetime.now()
+                time=datetime.now(),
+                tags=self.tags,
+                fields={
+                    "cpu_num": cpu_num
+                }
             ))
         return metrics
-
-    def send(self):
-        metrics = self.collect()
-        return self.engine.send(metrics)
