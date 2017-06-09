@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import logging
+import logging.handlers
 import os
 from argparse import ArgumentParser
 from ConfigParser import Error
@@ -13,6 +15,8 @@ class GMetricsException(Exception):
 
 
 class GMetrics(object):
+
+    LOG_FORMAT = '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
 
     def __init__(self):
         args = self.parse_arguments()
@@ -31,9 +35,34 @@ class GMetrics(object):
 
         self.config = config
 
-    def get_engine(self, engine_type):
-        if engine_type == 'influxdb':
-            return InfluxDB
+        try:
+            logging.basicConfig(level=logging.INFO, format=self.LOG_FORMAT)
+            if self.args.log:
+                formatter = logging.Formatter(self.LOG_FORMAT)
+                handler = logging.handlers.RotatingFileHandler(self.args.log)
+                handler.setFormatter(formatter)
+                logging.root.addHandler(handler)
+        except IOError as e:
+            raise GMetricsException("Error set log file: {}".format(str(e)))
+
+        self.logger = logging.getLogger("GMetrics")
+
+    def get_engine(self):
+        engine_config = dict(self.config.items('Engine'))
+        engine = None
+        if engine_config['type'] == 'InfluxDB':
+            params = dict(
+                host=engine_config['host'],
+                port=engine_config['port'],
+                database=engine_config['database'],
+                username=engine_config.get('username') or None,
+                password=engine_config.get('password') or None
+            )
+            engine = InfluxDB(**params)
+        if not engine:
+            raise GMetricsException('Unknown engine type "{}"'.format(engine_config['type']))
+        else:
+            return engine_config['type'], params, engine
 
     def parse_arguments(self):
         parser = ArgumentParser()
@@ -57,7 +86,10 @@ class GMetrics(object):
             raise GMetricsException("Config file not found, check the correctness of the path in --config")
 
     def run(self):
-        self.parse_arguments()
+        self.logger.info("Initializing")
+        engine_type, engine_params, engine = self.get_engine()
+        self.logger.info('Find engine "{}" with options "{}"'.format(engine_type, ",".join(["%s=%s" % (k, v) for k, v in engine_params.items()])))
+
 
 
 def main(*args, **kwargs):
