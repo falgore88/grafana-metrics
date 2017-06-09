@@ -4,14 +4,23 @@ from __future__ import unicode_literals
 import logging
 import logging.handlers
 import os
+import signal
+import sys
 from argparse import ArgumentParser
 from ConfigParser import Error
+from datetime import datetime
+from time import sleep
 
 from config import Config, ConfigValidationException
 from engines import InfluxDB
 from metrics import CPU
-from time import sleep
-from datetime import datetime
+
+
+def signal_handler(signal, frame):
+    sys.exit(0)
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 class GMetricsException(Exception):
@@ -63,9 +72,14 @@ class GMetrics(object):
         return metrics
 
     def get_metric_by_type(self, metric_type, metric_name, params):
-        tags = params.pop('tags', None)
+        tags = params.pop('tags', None) or None
         if tags:
-            tags = tags.split(',')
+            tags_data = tags.split(',')
+            tags = {}
+            for tag_d in tags_data:
+                key, val = tag_d.split("=")
+                tags[key.strip()] = val.strip()
+
         if metric_type == 'cpu':
             return CPU(metric_name, tags, **params)
         raise GMetricsException('Unknown engine type "{}"'.format(metric_type))
@@ -114,7 +128,7 @@ class GMetrics(object):
 
         metrics = self.get_metrics()
         for metric_name, metric in metrics.items():
-            self.logger.info('Find metric "{}" interval={} tags={}'.format(metric_name, metric.interval, metric.tags))
+            self.logger.info('Find metric "{}" interval={} tags={}'.format(metric_name, metric.interval, ",".join(["%s=%s" % (k, v) for k, v in metric.tags.items()])))
         metric_interval_data = {}
 
         while True:
@@ -129,8 +143,13 @@ class GMetrics(object):
                     except Exception as e:
                         self.logger.warning('Metric "{}" collection failed: {}'.format(metric_name, str(e)))
                     metric_interval_data[metric_name] = datetime.now()
+            try:
+                if metric_collected_data:
+                    engine.send(metric_collected_data)
+                    self.logger.info("Sending {} metrics to the database success".format(len(metric_collected_data)))
+            except Exception as e:
+                self.logger.warning("Sending metrics to the database failed: {}".format(str(e)))
             sleep(1)
-
 
 
 def main(*args, **kwargs):

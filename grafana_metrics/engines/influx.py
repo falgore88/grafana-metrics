@@ -20,4 +20,5 @@ class InfluxDB(Engine):
         )
 
     def send(self, metrics):
-        return self.client.write_points([m.to_influx() for m in metrics])
+        response = self.client.write_points([m.to_influx() for m in metrics])
+        return True
