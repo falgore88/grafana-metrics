@@ -13,7 +13,7 @@ from datetime import datetime
 from time import sleep
 
 from config import Config, ConfigValidationException
-from engines import InfluxDB
+from engines.influx import InfluxDB
 from metrics import CPU, Disk, Memory, Nginx
 
 
