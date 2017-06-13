@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-from __future__ import with_statement
 from setuptools import setup, find_packages
 
 
-VERSION = "0.0.15"
+VERSION = "0.0.16"
 
 setup(
     name='grafana-metrics',
