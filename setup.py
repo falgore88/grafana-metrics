@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-from setuptools import setup, find_packages
+# coding=utf-8
+from __future__ import with_statement, unicode_literals
 
+from setuptools import find_packages, setup
 
-VERSION = "0.0.16"
+VERSION = "0.0.17"
 
 setup(
     name='grafana-metrics',
