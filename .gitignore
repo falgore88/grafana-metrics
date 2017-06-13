@@ -1,3 +1,5 @@
+gmetrics.test.ini
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -6,6 +8,7 @@ __pycache__/
 # C extensions
 *.so
 .vscode
+.idea/
 
 # Distribution / packaging
 .Python
