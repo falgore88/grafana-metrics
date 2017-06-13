@@ -1,1 +1,1 @@
-from .influx import InfluxDB
+from influx import InfluxDB
