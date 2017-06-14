@@ -14,7 +14,7 @@ from time import sleep
 
 from config import Config, ConfigValidationException
 from engines.influx import InfluxDB
-from metrics import CPU, Disk, Memory, Nginx
+from metrics import CPU, Disk, Memory, Nginx, Redis
 
 
 def signal_handler(signal, frame):
@@ -95,6 +95,8 @@ class GMetrics(object):
             return Disk(metric_name, tags, **params)
         elif metric_type == 'nginx':
             return Nginx(metric_name, tags, **params)
+        elif metric_type == 'redis':
+            return Redis(metric_name, tags, **params)
         raise GMetricsException('Unknown metric type "{}"'.format(metric_type))
 
     def get_engine(self):
