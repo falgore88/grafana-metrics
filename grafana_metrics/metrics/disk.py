@@ -7,6 +7,8 @@ from base import Metric, MetricData
 
 class Disk(Metric):
 
+    TYPE = 'disk'
+
     def __init__(self, *args, **kwargs):
         super(Disk, self).__init__(*args, **kwargs)
         self.path = kwargs.get('path', '/')

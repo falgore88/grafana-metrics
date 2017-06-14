@@ -14,7 +14,8 @@ from time import sleep
 
 from config import Config, ConfigValidationException
 from engines.influx import InfluxDB
-from metrics import CPU, Disk, Memory, Nginx, Redis
+from metrics.base import Metric
+from utils import inheritors
 
 
 def signal_handler(signal, frame):
@@ -37,6 +38,7 @@ class GMetrics(object):
         self.validate_args(args)
         self.args = args
         self.config_file = self.args.config
+        self.metrics = {c.TYPE: c for c in inheritors(Metric)}
 
         config = Config()
         try:
@@ -87,16 +89,9 @@ class GMetrics(object):
                 key, val = tag_d.split("=")
                 tags[key.strip()] = val.strip()
 
-        if metric_type == 'cpu':
-            return CPU(metric_name, tags, **params)
-        elif metric_type == 'memory':
-            return Memory(metric_name, tags, **params)
-        elif metric_type == 'disk':
-            return Disk(metric_name, tags, **params)
-        elif metric_type == 'nginx':
-            return Nginx(metric_name, tags, **params)
-        elif metric_type == 'redis':
-            return Redis(metric_name, tags, **params)
+        metric = self.metrics.get(metric_type)
+        if metric:
+            return metric(metric_name, tags, **params)
         raise GMetricsException('Unknown metric type "{}"'.format(metric_type))
 
     def get_engine(self):

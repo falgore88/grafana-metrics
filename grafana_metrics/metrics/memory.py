@@ -7,6 +7,8 @@ from base import Metric, MetricData
 
 class Memory(Metric):
 
+    TYPE = 'memory'
+
     def collect(self):
         virtual_memory = psutil.virtual_memory()
         return [MetricData(

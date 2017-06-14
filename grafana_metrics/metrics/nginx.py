@@ -13,6 +13,8 @@ from grafana_metrics.utils import reverse_readline
 
 class Nginx(Metric):
 
+    TYPE = 'nginx'
+
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
         self.satus_re = kwargs.get('satus_re')

@@ -35,6 +35,8 @@ class MetricData(object):
 
 class Metric(object):
 
+    TYPE = None
+
     def __init__(self, measurement, tags=None, interval=60, timeout=2, *args, **kwargs):
         self.measurement = measurement
         self.tags = tags or {}

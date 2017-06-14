@@ -9,6 +9,8 @@ from base import Metric, MetricData
 
 class CPU(Metric):
 
+    TYPE = 'cpu'
+
     def collect(self):
         metrics = []
         for cpu_num, cpu_percent in enumerate(psutil.cpu_percent(interval=1, percpu=True), start=1):
