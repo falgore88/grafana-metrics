@@ -17,11 +17,11 @@ class Nginx(Metric):
 
     def __init__(self, *args, **kwargs):
         super(self.__class__, self).__init__(*args, **kwargs)
-        self.satus_re = kwargs.get('satus_re')
+        self.status_re = kwargs.get('status_re')
         try:
-            self.status_re = re.compile(self.satus_re, re.I | re.M | re.U)
+            self.status_re = re.compile(self.status_re, re.I | re.M | re.U)
         except re.error as e:
-            raise Exception('Parameter "date_re" {}'.format(str(e)))
+            raise Exception('Parameter "status_re" {}'.format(str(e)))
 
         self.access_log_path = kwargs.get('access_log_path')
         if not os.path.isfile(self.access_log_path):

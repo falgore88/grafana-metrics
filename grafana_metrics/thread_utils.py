@@ -25,5 +25,6 @@ class MetricThread(Thread):
                     logging.warning('The metric "{}" collect timeout {} sec'.format(self.metric.get_name(), self.metric.timeout))
             pool.terminate()
         except Exception as e:
+            print e
             logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), str(e)))
         self.callback(self.metric, [])
