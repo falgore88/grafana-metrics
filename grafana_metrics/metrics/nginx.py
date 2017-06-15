@@ -34,10 +34,15 @@ class Nginx(Metric):
     def collect(self):
         try:
             with open(self.access_log_path) as fh:
+                print self.access_log_path
                 row_generator = reverse_readline(fh)
                 if not self.last_read_row_hash:
+                    print 'set hash'
                     row = next(row_generator)
+                    print "row = {}".format(row)
                     self.last_read_row_hash = self.get_row_hash(row)
+                    print "row = {}".format(row)
+                    print 'set hash success'
                     return []
                 else:
                     first_row_hash = None
