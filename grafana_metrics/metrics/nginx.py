@@ -39,7 +39,7 @@ class Nginx(Metric):
                     row = next(row_generator)
                     row = row.strip()
                 except StopIteration:
-                    self.last_read_row_hash = ""
+                    self.last_read_row_hash = "no data"
                 else:
                     self.last_read_row_hash = self.get_row_hash(row.strip())
                 return []
