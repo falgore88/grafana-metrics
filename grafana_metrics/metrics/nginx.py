@@ -35,7 +35,6 @@ class Nginx(Metric):
         with open(self.access_log_path) as fh:
             row_generator = reverse_readline(fh)
             if not self.last_read_row_hash:
-                print 'set hash'
                 try:
                     row = next(row_generator)
                     row = row.strip()

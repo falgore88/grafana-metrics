@@ -154,8 +154,6 @@ class GMetrics(object):
         def process_metric(metric, collected_data):
             self.lock.acquire()
             if collected_data:
-                for metric_data in collected_data:
-                    logging.info('The metric "{}" is collected: {}'.format(metric.get_name(), unicode(metric_data)))
                 self.engine.send(collected_data)
             metric_interval_data[metric.get_name()] = datetime.now()
             self.lock.release()
