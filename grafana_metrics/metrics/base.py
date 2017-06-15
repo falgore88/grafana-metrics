@@ -32,6 +32,9 @@ class MetricData(object):
             row['fields'] = self.fields
         return row
 
+    def __repr__(self):
+        return self.__unicode__().encode("utf-8")
+
 
 class Metric(object):
 
@@ -41,6 +44,16 @@ class Metric(object):
         self.measurement = measurement
         self.tags = tags or {}
         self.interval = int(interval)
+        self.timeout = int(timeout) if timeout else None
 
     def collect(self):
         raise NotImplemented
+
+    def get_name(self):
+        return "%s(%s)" % (self.measurement, self.TYPE)
+
+    def __repl__(self):
+        return self.get_name()
+
+    def __unicode__(self):
+        return self.get_name()

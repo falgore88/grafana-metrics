@@ -7,14 +7,16 @@ import logging.handlers
 import os
 import signal
 import sys
-from argparse import ArgumentParser
 from ConfigParser import Error
+from argparse import ArgumentParser
 from datetime import datetime
+from multiprocessing import Lock
 from time import sleep
 
 from config import Config, ConfigValidationException
 from engines.influx import InfluxDB
 from metrics.base import Metric
+from thread_utils import MetricThread
 from utils import inheritors
 
 
@@ -30,8 +32,7 @@ class GMetricsException(Exception):
 
 
 class GMetrics(object):
-
-    LOG_FORMAT = '%(asctime)s | %(name)s | %(levelname)s | %(message)s'
+    LOG_FORMAT = '%(asctime)s | %(levelname)s | %(message)s'
 
     def __init__(self):
         args = self.parse_arguments()
@@ -39,6 +40,8 @@ class GMetrics(object):
         self.args = args
         self.config_file = self.args.config
         self.metrics = {c.TYPE: c for c in inheritors(Metric)}
+        self.engine = None
+        self.lock = Lock()
 
         config = Config()
         try:
@@ -64,21 +67,22 @@ class GMetrics(object):
         self.logger = logging.getLogger("GMetrics")
 
     def get_metrics(self):
-        sections = [section for section in self.config.sections() if section.startswith("Metric:")]
+        sections = [section for section in self.config.sections()
+                    if section.startswith("Metric:")]
         metrics = {}
         for section_name in sections:
             section_params = self.config.items(section_name).to_dict()
             metric_type = section_params.pop('type')
             metric_name = section_name.replace('Metric:', '').strip()
-            metric_key = "%s(%s)" % (metric_name, metric_type)
             tags = section_params.pop('tag', [])
             if not isinstance(tags, list):
                 tags = [tags]
             try:
                 metric = self.get_metric_by_type(metric_type, metric_name, section_params, tags)
-                metrics[metric_key] = metric
+                metrics[metric.get_name()] = metric
             except Exception as e:
-                self.logger.warning('Error initialize metric "{}": {}'.format(metric_key, str(e)))
+                self.logger.warning(
+                    'Error initialize metric "{}": {}'.format(metric_name, str(e)))
         return metrics
 
     def get_metric_by_type(self, metric_type, metric_name, params, tags_data):
@@ -108,7 +112,8 @@ class GMetrics(object):
             )
             engine = InfluxDB(**params)
         if not engine:
-            raise GMetricsException('Unknown engine type "{}"'.format(engine_type))
+            raise GMetricsException(
+                'Unknown engine type "{}"'.format(engine_type))
         else:
             return engine_type, params, engine
 
@@ -128,42 +133,48 @@ class GMetrics(object):
 
     def validate_args(slef, args):
         if not args.config:
-            raise GMetricsException("No set config file, please run program with parameter --config=patch_to_config.ini")
+            raise GMetricsException(
+                "No set config file, please run program with parameter --config=patch_to_config.ini")
         if not os.path.isfile(args.config):
-            raise GMetricsException("Config file not found, check the correctness of the path in --config")
+            raise GMetricsException(
+                "Config file not found, check the correctness of the path in --config")
 
     def run(self):
         self.logger.info("Initializing")
         engine_type, engine_params, engine = self.get_engine()
+        self.engine = engine
         self.logger.info('Find engine "{}" with options "{}"'.format(engine_type, ",".join(["%s=%s" % (k, v) for k, v in engine_params.items()])))
 
         metrics = self.get_metrics()
         for metric_name, metric in metrics.items():
-            self.logger.info('Find metric "{}" interval={} tags={}'.format(metric_name, metric.interval, ",".join(["%s=%s" % (k, v) for k, v in metric.tags.items()])))
+            self.logger.info('Find metric "{}" interval={} tags={}'.format(
+                metric_name, metric.interval, ",".join(["%s=%s" % (k, v) for k, v in metric.tags.items()])))
         metric_interval_data = {}
 
+        def process_metric(metric, collected_data):
+            self.lock.acquire()
+            if collected_data:
+                for metric_data in collected_data:
+                    logging.info('The metric "{}" is collected: {}'.format(metric.get_name(), unicode(metric_data)))
+                self.engine.send(collected_data)
+            metric_interval_data[metric.get_name()] = datetime.now()
+            self.lock.release()
+
+        metric_threads = {}
+
         while True:
-            metric_collected_data = []
+            metric_need_collect = []
             for metric_name, metric in metrics.items():
                 if not metric_interval_data.get(metric_name) or (datetime.now() - metric_interval_data[metric_name]).seconds >= metric.interval:
-                    try:
-                        collected_data = metric.collect()
-                        if collected_data:
-                            for metric_data in collected_data:
-                                self.logger.info('The metric "{}" is collected: {}'.format(metric_name, unicode(metric_data)))
-                            metric_collected_data.extend(collected_data)
-                        else:
-                            self.logger.info('The metric "{}" no data'.format(metric_name))
-                    except Exception as e:
-                        print e
-                        self.logger.warning('Metric "{}" collection failed: {}'.format(metric_name, str(e)))
-                    metric_interval_data[metric_name] = datetime.now()
-            try:
-                if metric_collected_data:
-                    engine.send(metric_collected_data)
-                    self.logger.info("Sending {} metrics to the database success".format(len(metric_collected_data)))
-            except Exception as e:
-                self.logger.warning("Sending metrics to the database failed: {}".format(str(e)))
+                    metric_need_collect.append(metric)
+
+            if metric_need_collect:
+                for metric in metric_need_collect:
+                    metric_name = metric.get_name()
+                    if not metric_threads.get(metric_name) or not metric_threads[metric_name].is_alive():
+                        thread = MetricThread(metric, process_metric)
+                        thread.start()
+                        metric_threads[metric_name] = thread
             sleep(1)
 
 
