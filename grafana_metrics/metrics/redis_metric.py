@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from base import Metric, MetricData
-from redis import Redis as Client
 
 
 class Redis(Metric):
@@ -10,6 +9,8 @@ class Redis(Metric):
     TYPE = 'redis'
 
     def __init__(self, *args, **kwargs):
+        from redis import Redis as Client
+
         super(self.__class__, self).__init__(*args, **kwargs)
         self.host = kwargs.get('host')
         self.port = kwargs.get('port')

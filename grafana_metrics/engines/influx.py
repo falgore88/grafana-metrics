@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from base import Engine
-from influxdb import InfluxDBClient
 
 
 class InfluxDB(Engine):
@@ -11,6 +10,7 @@ class InfluxDB(Engine):
     """
 
     def __init__(self, host, port, database, username=None, password=None):
+        from influxdb import InfluxDBClient
         self.client = InfluxDBClient(
             host=host,
             port=port,
