@@ -4,7 +4,7 @@ from __future__ import with_statement, unicode_literals
 
 from setuptools import find_packages, setup
 
-VERSION = "0.0.23"
+VERSION = "0.0.24"
 
 setup(
     name='grafana-metrics',

@@ -23,7 +23,7 @@ class MetricThread(Thread):
                     self.callback(self.metric, collected_data)
                 except TimeoutError:
                     logging.warning('The metric "{}" collect timeout {} sec'.format(self.metric.get_name(), self.metric.timeout))
-                    self.callback(self.metric, [])
             pool.terminate()
         except Exception as e:
             logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), str(e)))
+        self.callback(self.metric, [])
