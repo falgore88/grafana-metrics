@@ -50,7 +50,10 @@ class Metric(object):
         raise NotImplemented
 
     def get_name(self):
-        return "%s(%s)" % (self.measurement, self.TYPE)
+        name = "%s(%s)" % (self.measurement, self.TYPE)
+        if self.tags:
+            name += " {}".format(",".join(["%s=%s" % (k, v) for k, v in self.tags.items()]))
+        return name
 
     def __repl__(self):
         return self.get_name()

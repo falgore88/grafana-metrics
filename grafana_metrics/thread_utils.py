@@ -26,4 +26,4 @@ class MetricThread(Thread):
                     self.callback(self.metric, [])
             pool.terminate()
         except Exception as e:
-            logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), unicode(e)))
+            logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), str(e)))
