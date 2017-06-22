@@ -53,6 +53,10 @@ class SelectelCDN(Metric):
 
     def collect(self):
         data = []
+        total = {
+            'count': 0,
+            'bytes': 0
+        }
         for container in self.get_storage_info():
             tags = copy(self.tags)
             tags.update({
@@ -66,4 +70,14 @@ class SelectelCDN(Metric):
                     'bytes': container['bytes']
                 }
             ))
+            total['count'] += int(container['count'])
+            total['bytes'] += int(container['bytes'])
+
+        tags = copy(self.tags)
+        tags['container'] = 'total'
+        data.append(MetricData(
+            name=self.measurement,
+            tags=tags,
+            fields=total
+        ))
         return data
