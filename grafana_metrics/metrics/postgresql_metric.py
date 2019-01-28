@@ -23,9 +23,10 @@ class PostgreSQL(Metric):
         with psycopg2.connect(self.dsn) as con:
             with con.cursor() as cursor:
                 cursor.execute(self.query)
-                res = dict(zip([column[0] for column in cursor.description], cursor.fetchone()))
+                cursor_description = cursor.description
+                many_res = [dict(zip([column[0] for column in cursor_description], row)) for row in cursor.fetchall()]
                 return [MetricData(
                     name=self.measurement,
                     tags=self.tags,
                     fields=res
-                )]
+                ) for res in many_res]
