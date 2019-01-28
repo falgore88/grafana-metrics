@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from base import Metric, MetricData
+from copy import copy
 
 
 class PostgreSQL(Metric):
@@ -22,11 +23,18 @@ class PostgreSQL(Metric):
         import psycopg2
         with psycopg2.connect(self.dsn) as con:
             with con.cursor() as cursor:
+                metrics = []
                 cursor.execute(self.query)
                 cursor_description = cursor.description
                 many_res = [dict(zip([column[0] for column in cursor_description], row)) for row in cursor.fetchall()]
-                return [MetricData(
-                    name=self.measurement,
-                    tags=self.tags,
-                    fields=res
-                ) for res in many_res]
+                for res in many_res:
+                    tags = copy(self.tags)
+                    for k in tags:
+                        if k in res:
+                            tags[k] = res[k]
+                    metrics.append(MetricData(
+                        name=self.measurement,
+                        tags=tags,
+                        fields=res
+                    ))
+                return metrics

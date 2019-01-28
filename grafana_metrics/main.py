@@ -74,7 +74,8 @@ class GMetrics(object):
             section_params = self.config.items(section_name).to_dict()
             metric_type = section_params.pop('type')
             metric_name = section_name.replace('Metric:', '').strip()
-            tags = section_params.pop('tag', [])
+            tags = self.config.items(section_name).getlist('tag')
+            section_params.pop('tag', [])
             if not isinstance(tags, list):
                 tags = [tags]
             try:
@@ -90,8 +91,11 @@ class GMetrics(object):
         tags = {}
         if tags_data:
             for tag_d in tags_data:
-                key, val = tag_d.split("=")
-                tags[key.strip()] = val.strip()
+                try:
+                    key, val = tag_d.split("=")
+                    tags[key.strip()] = val.strip()
+                except ValueError:
+                    tags[tag_d.strip()] = None
 
         metric = self.metrics.get(metric_type)
         if metric:
