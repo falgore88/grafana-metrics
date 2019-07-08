@@ -1,7 +1,9 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from base import Metric, MetricData
+import six
+
+from .base import Metric, MetricData
 
 
 class Redis(Metric):
@@ -22,7 +24,7 @@ class Redis(Metric):
                 password=self.password
             )
         except Exception as e:
-            raise Exception("Redis connect failed: {}".format(str(e)))
+            raise Exception("Redis connect failed: {}".format(six.text_type(e)))
 
     def collect(self):
         data = self.client.info('Memory')

@@ -6,7 +6,7 @@ from copy import copy
 from datetime import datetime, timedelta
 
 import requests
-from base import Metric, MetricData
+from .base import Metric, MetricData
 
 
 class SelectelCDN(Metric):

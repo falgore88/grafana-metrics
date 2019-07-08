@@ -6,12 +6,13 @@ import re
 from collections import defaultdict
 from hashlib import md5
 
-from base import Metric, MetricData
+import six
+
 from grafana_metrics.utils import reverse_readline
+from .base import Metric, MetricData
 
 
 class Nginx(Metric):
-
     TYPE = 'nginx'
 
     def __init__(self, *args, **kwargs):
@@ -20,7 +21,7 @@ class Nginx(Metric):
         try:
             self.status_re = re.compile(self.status_re, re.I | re.M | re.U)
         except re.error as e:
-            raise Exception('Parameter "status_re" {}'.format(str(e)))
+            raise Exception('Parameter "status_re" {}'.format(six.text_type(e)))
 
         self.access_log_path = kwargs.get('access_log_path')
         if not os.path.isfile(self.access_log_path):
@@ -61,7 +62,7 @@ class Nginx(Metric):
                     if match:
                         status = int(match.groups()[-1])
                         data[status] += 1
-                        data['{}xx'.format(unicode(status)[0])] += 1
+                        data['{}xx'.format(str(status)[0])] += 1
                         data['total'] += 1
             self.last_read_row_hash = first_row_hash
             if data:

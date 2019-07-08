@@ -1,23 +1,30 @@
 #!/usr/bin/env python
 # coding: utf-8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
+
+import six
 
 import logging
 import logging.handlers
 import os
 import signal
 import sys
-from ConfigParser import Error
+
+try:
+    from ConfigParser import Error
+except ImportError:
+    from configparser import Error
+
 from argparse import ArgumentParser
 from datetime import datetime
 from multiprocessing import Lock
 from time import sleep
 
-from config import Config, ConfigValidationException
-from engines.influx import InfluxDB
-from metrics.base import Metric
-from thread_utils import MetricThread
-from utils import inheritors
+from grafana_metrics.config import Config, ConfigValidationException
+from grafana_metrics.engines.influx import InfluxDB
+from grafana_metrics.metrics.base import Metric
+from grafana_metrics.thread_utils import MetricThread
+from grafana_metrics.utils import inheritors
 
 
 def signal_handler(signal, frame):
@@ -48,9 +55,9 @@ class GMetrics(object):
             config.read(self.config_file)
             config.validate()
         except ConfigValidationException as e:
-            raise GMetricsException("Error validate config: {}".format(str(e)))
+            raise GMetricsException("Error validate config: {}".format(six.text_type(e)))
         except Error as e:
-            raise GMetricsException("Error parsing config: {}".format(str(e)))
+            raise GMetricsException("Error parsing config: {}".format(six.text_type(e)))
 
         self.config = config
 
@@ -62,7 +69,7 @@ class GMetrics(object):
                 handler.setFormatter(formatter)
                 logging.root.addHandler(handler)
         except IOError as e:
-            raise GMetricsException("Error set log file: {}".format(str(e)))
+            raise GMetricsException("Error set log file: {}".format(six.text_type(e)))
 
         self.logger = logging.getLogger("GMetrics")
 
@@ -83,7 +90,7 @@ class GMetrics(object):
                 metrics[metric.get_name()] = metric
             except Exception as e:
                 self.logger.warning(
-                    'Error initialize metric "{}": {}'.format(metric_name, str(e)))
+                    'Error initialize metric "{}": {}'.format(metric_name, six.text_type(e)))
         return metrics
 
     def get_metric_by_type(self, metric_type, metric_name, params, tags_data):
@@ -184,7 +191,7 @@ def main(*args, **kwargs):
     try:
         GMetrics().run()
     except GMetricsException as e:
-        print "\x1b[1;37;41m{}\x1b[0m".format(str(e))
+        print("\x1b[1;37;41m{}\x1b[0m".format(six.text_type(e)))
 
 
 if __name__ == '__main__':

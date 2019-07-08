@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from base import Metric, MetricData
+from .base import Metric, MetricData
 from copy import copy
 
 

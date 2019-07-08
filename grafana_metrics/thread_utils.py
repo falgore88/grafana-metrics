@@ -2,9 +2,13 @@
 from __future__ import unicode_literals
 
 import logging
-from threading import Thread
-from multiprocessing.dummy import Pool as ThreadPool, TimeoutError
+import traceback
 from contextlib import closing
+from multiprocessing import TimeoutError
+from multiprocessing.dummy import Pool as ThreadPool
+from threading import Thread
+
+import six
 
 
 class MetricThread(Thread):
@@ -22,7 +26,7 @@ class MetricThread(Thread):
                     collected_data = async_res.get(self.metric.timeout)
                     if collected_data:
                         for metric_data in collected_data:
-                            logging.info('The metric "{}" is collected: {}'.format(self.metric.get_name(), unicode(metric_data)))
+                            logging.info('The metric "{}" is collected: {}'.format(self.metric.get_name(), six.text_type(metric_data)))
                     else:
                         logging.info('The metric "{}" no data'.format(self.metric.get_name()))
                     self.callback(self.metric, collected_data)
@@ -30,6 +34,6 @@ class MetricThread(Thread):
                     logging.warning('The metric "{}" collect timeout {} sec'.format(self.metric.get_name(), self.metric.timeout))
             pool.terminate()
         except Exception as e:
-            print e
-            logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), str(e)))
+            traceback.print_exc()
+            logging.warning('The metric "{}" collect error: {}'.format(self.metric.get_name(), six.text_type(e)))
         self.callback(self.metric, [])

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import psutil
-from base import Metric, MetricData
+from .base import Metric, MetricData
 
 
 class Memory(Metric):

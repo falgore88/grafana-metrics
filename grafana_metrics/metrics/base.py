@@ -1,7 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+from six import python_2_unicode_compatible
 
+
+@python_2_unicode_compatible
 class MetricData(object):
 
     def __init__(self, name, fields, tags=None, *args, **kwargs):
@@ -15,7 +18,7 @@ class MetricData(object):
         self.tags = tags or {}
         self.fields = fields
 
-    def __unicode__(self):
+    def __str__(self):
         metric_string = "name=%s" % self.name
         if self.tags:
             metric_string += ",{}".format(",".join(["%s=%s" % (k, v) for k, v in self.tags.items()]))

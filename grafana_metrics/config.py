@@ -2,7 +2,10 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict
-from ConfigParser import ConfigParser
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 
 
 class ConfigValidationException(Exception):

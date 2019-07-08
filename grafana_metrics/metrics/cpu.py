@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from copy import copy
 
 import psutil
-from base import Metric, MetricData
+from .base import Metric, MetricData
 
 
 class CPU(Metric):
