@@ -30,7 +30,7 @@ class Nginx(Metric):
         self.last_read_row_hash = None
 
     def get_row_hash(self, row):
-        return md5(row).hexdigest() if row else ""
+        return md5(row.encode('utf-8')).hexdigest() if row else ""
 
     def collect(self):
         with open(self.access_log_path) as fh:
