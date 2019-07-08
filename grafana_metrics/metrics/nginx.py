@@ -61,7 +61,7 @@ class Nginx(Metric):
                     match = self.status_re.match(row.strip())
                     if match:
                         status = int(match.groups()[-1])
-                        data[status] += 1
+                        data[six.text_type(status)] += 1
                         data['{}xx'.format(str(status)[0])] += 1
                         data['total'] += 1
             self.last_read_row_hash = first_row_hash
