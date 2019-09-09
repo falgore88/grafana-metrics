@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 
-from fabric.api import local, task, quiet
+from fabric.task import local, task, quiet
+from grafana_metrics.main import main
 
 
 def change_version(change):
@@ -39,3 +40,7 @@ def minor():
 @task
 def patch():
     release(change_version(lambda x, y, z: [x, y, z+1]))
+
+@task
+def run():
+    main()

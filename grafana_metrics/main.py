@@ -165,7 +165,10 @@ class GMetrics(object):
         def process_metric(metric, collected_data):
             self.lock.acquire()
             if collected_data:
-                self.engine.send(collected_data)
+                try:
+                    self.engine.send(collected_data)
+                except Exception as e:
+                    self.logger.exception("Error")
             metric_interval_data[metric.get_name()] = datetime.now()
             self.lock.release()
 

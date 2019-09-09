@@ -14,6 +14,7 @@ class InfluxDB(Engine):
         self.client = InfluxDBClient(
             host=host,
             port=port,
+            timeout=10,
             database=database,
             username=username,
             password=password
