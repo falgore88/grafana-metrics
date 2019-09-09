@@ -175,18 +175,21 @@ class GMetrics(object):
         metric_threads = {}
 
         while True:
-            metric_need_collect = []
-            for metric_name, metric in metrics.items():
-                if not metric_interval_data.get(metric_name) or (datetime.now() - metric_interval_data[metric_name]).seconds >= metric.interval:
-                    metric_need_collect.append(metric)
+            try:
+                metric_need_collect = []
+                for metric_name, metric in metrics.items():
+                    if not metric_interval_data.get(metric_name) or (datetime.now() - metric_interval_data[metric_name]).seconds >= metric.interval:
+                        metric_need_collect.append(metric)
 
-            if metric_need_collect:
-                for metric in metric_need_collect:
-                    metric_name = metric.get_name()
-                    if not metric_threads.get(metric_name) or not metric_threads[metric_name].is_alive():
-                        thread = MetricThread(metric, process_metric)
-                        thread.start()
-                        metric_threads[metric_name] = thread
+                if metric_need_collect:
+                    for metric in metric_need_collect:
+                        metric_name = metric.get_name()
+                        if not metric_threads.get(metric_name) or not metric_threads[metric_name].is_alive():
+                            thread = MetricThread(metric, process_metric)
+                            thread.start()
+                            metric_threads[metric_name] = thread
+            except Exception as e:
+                self.logger.exception("Error")
             sleep(1)
 
 
