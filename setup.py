@@ -16,7 +16,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'influxdb==4.1.1',
-        'psutil==5.2.2'
+        'psutil==5.6.6'
     ],
     entry_points={
         'console_scripts': [
